@@ -1,0 +1,48 @@
+name: Execution
+on:
+  schedule:
+    - cron: "0 0 15 * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+jobs:
+  download-bigquery-agg:
+    runs-on: ubuntu-24.04
+    steps:
+      - id: "checkout"
+        uses: "actions/checkout@v3"
+      - id: "auth"
+        uses: 'google-github-actions/auth@v2'
+        with:
+          credentials_json: '${{ secrets.GOOGLE_CREDENTIALS }}'
+      - id: "java_setup"
+        uses: "actions/setup-java@v4"
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+      - id: "gradle"
+        uses: gradle/actions/setup-gradle@v4
+      - id: "run"
+        name: "Build and Run"
+        run: "./gradlew run"
+      - id: "get_filename"
+        name: "Get the generated filename and create tag name"
+        run: |
+          FILENAME=$(ls | grep -E '[0-9]{6}\.csv\.xz$')
+          TAG_NAME=$(basename "$FILENAME" .csv.xz)
+          echo "FILENAME=$FILENAME" >> $GITHUB_ENV
+          echo "TAG_NAME=$TAG_NAME" >> $GITHUB_ENV
+      - id: "generate_tag"
+        name: "Generate a new tag"
+        run: |
+          git tag "$TAG_NAME"
+          git push --force origin "$TAG_NAME"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - id: "release_csv"
+        uses: softprops/action-gh-release@v2
+        with:
+          body: ${{ env.FILENAME }}
+          tag_name: ${{ env.TAG_NAME }}
+          files: ${{ env.FILENAME }}
