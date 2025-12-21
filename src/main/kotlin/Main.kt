@@ -7,6 +7,7 @@ import com.google.cloud.bigquery.JobInfo
 import com.google.cloud.bigquery.QueryJobConfiguration
 import com.google.cloud.bigquery.QueryParameterValue
 import org.tukaani.xz.LZMA2Options
+import org.tukaani.xz.LZMA2Options.PRESET_MAX
 import org.tukaani.xz.XZOutputStream
 import java.io.FileOutputStream
 import java.io.OutputStreamWriter
@@ -63,7 +64,7 @@ fun main() {
     val result = queryJob.getQueryResults()
 
     FileOutputStream("$yearMonth.csv.xz").use { fos ->
-        XZOutputStream(fos, LZMA2Options()).use { xzOut ->
+        XZOutputStream(fos, LZMA2Options(PRESET_MAX)).use { xzOut ->
             OutputStreamWriter(xzOut).use { writer ->
                 writer.write("origin,rank\n")
 
