@@ -1,7 +1,7 @@
 plugins {
-    kotlin("jvm") version "2.0.0"
+    kotlin("jvm") version "2.4.21"
     application
-    id("org.jlleitschuh.gradle.ktlint") version "12.1.1"
+    id("org.jlleitschuh.gradle.ktlint") version "14.2.0"
 }
 
 group = "work.kyokko"
@@ -12,9 +12,9 @@ repositories {
 }
 
 dependencies {
-    implementation(platform("com.google.cloud:libraries-bom:26.39.0"))
+    implementation(platform("com.google.cloud:libraries-bom:26.93.0"))
     implementation("com.google.cloud:google-cloud-bigquery")
-    implementation("org.tukaani:xz:1.10")
+    implementation("org.tukaani:xz:1.12")
 }
 
 tasks.test {

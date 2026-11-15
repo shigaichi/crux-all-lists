@@ -1,11 +1,13 @@
 package work.kyokko
 
 import com.google.auth.oauth2.GoogleCredentials
+import com.google.cloud.ServiceOptions
 import com.google.cloud.bigquery.BigQueryOptions
 import com.google.cloud.bigquery.JobId
 import com.google.cloud.bigquery.JobInfo
 import com.google.cloud.bigquery.QueryJobConfiguration
 import com.google.cloud.bigquery.QueryParameterValue
+import com.google.cloud.http.HttpTransportOptions
 import org.tukaani.xz.LZMA2Options
 import org.tukaani.xz.LZMA2Options.PRESET_MAX
 import org.tukaani.xz.XZOutputStream
@@ -19,9 +21,22 @@ fun main() {
     val credentials = GoogleCredentials.getApplicationDefault()
 
     val bigquery =
-        BigQueryOptions.newBuilder()
+        BigQueryOptions
+            .newBuilder()
             .setCredentials(credentials)
-            .build()
+            .setTransportOptions(
+                HttpTransportOptions
+                    .newBuilder()
+                    .setConnectTimeout(60_000)
+                    .setReadTimeout(300_000)
+                    .build(),
+            ).setRetrySettings(
+                ServiceOptions
+                    .getDefaultRetrySettings()
+                    .toBuilder()
+                    .setMaxAttempts(10)
+                    .build(),
+            ).build()
             .service
 
     val query = """
@@ -45,7 +60,8 @@ fun main() {
     val ageParam = QueryParameterValue.int64(yearMonth.toLong())
 
     val queryConfig =
-        QueryJobConfiguration.newBuilder(query)
+        QueryJobConfiguration
+            .newBuilder(query)
             .setUseLegacySql(false)
             .addNamedParameter("min_age", ageParam)
             .build()
